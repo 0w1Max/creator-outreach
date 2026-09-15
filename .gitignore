@@ -1,0 +1,11 @@
+node_modules
+.next
+.env
+.env.local
+coverage
+*.log
+.DS_Store
+
+# local database / runtime data
+postgres-data
+redis-data

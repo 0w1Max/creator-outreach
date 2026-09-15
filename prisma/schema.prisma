@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SenderStatus {
+  ACTIVE
+  PAUSED
+  INVALID
+}
+
+enum LeadStatus {
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+}
+
+enum CampaignStatus {
+  DRAFT
+  QUEUED
+  RUNNING
+  PAUSED
+  COMPLETED
+  FAILED
+}
+
+enum RecipientStatus {
+  PENDING
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  senders   SenderAccount[]
+  leads     Lead[]
+  campaigns Campaign[]
+}
+
+model SenderAccount {
+  id           String       @id @default(cuid())
+  workspaceId  String
+  name         String
+  fromEmail    String
+  smtpHost     String
+  smtpPort     Int          @default(587)
+  smtpSecure   Boolean      @default(false)
+  username     String
+  passwordEnc  String
+  status       SenderStatus @default(ACTIVE)
+  dailyLimit   Int          @default(100)
+  sentToday    Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaigns    Campaign[]
+  messages     EmailMessage[]
+
+  @@index([workspaceId, status])
+}
+
+model Lead {
+  id           String       @id @default(cuid())
+  workspaceId  String
+  name         String?
+  email        String
+  channelName  String?
+  channelUrl   String?
+  company      String?
+  status       LeadStatus   @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  recipients   CampaignRecipient[]
+  messages     EmailMessage[]
+
+  @@unique([workspaceId, email])
+  @@index([workspaceId, status])
+}
+
+model Campaign {
+  id           String         @id @default(cuid())
+  workspaceId  String
+  senderId     String
+  name         String
+  subject      String
+  body         String
+  status       CampaignStatus @default(DRAFT)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  startedAt    DateTime?
+  completedAt  DateTime?
+  workspace    Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sender       SenderAccount  @relation(fields: [senderId], references: [id])
+  recipients   CampaignRecipient[]
+  messages     EmailMessage[]
+
+  @@index([workspaceId, status])
+}
+
+model CampaignRecipient {
+  id          String           @id @default(cuid())
+  campaignId  String
+  leadId      String
+  status      RecipientStatus  @default(PENDING)
+  attempts    Int              @default(0)
+  lastError   String?
+  queuedAt    DateTime?
+  sentAt      DateTime?
+  campaign    Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  lead        Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, leadId])
+  @@index([campaignId, status])
+}
+
+model EmailMessage {
+  id             String      @id @default(cuid())
+  campaignId     String?
+  leadId         String?
+  senderId       String
+  messageKey     String      @unique
+  fromEmail      String
+  toEmail        String
+  subject        String
+  body           String
+  providerId     String?
+  status         RecipientStatus @default(SENDING)
+  error          String?
+  sentAt         DateTime?
+  createdAt      DateTime    @default(now())
+  campaign       Campaign?   @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  lead           Lead?       @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  sender         SenderAccount @relation(fields: [senderId], references: [id])
+
+  @@index([toEmail, createdAt])
+}
+
+model SuppressionEntry {
+  id          String   @id @default(cuid())
+  workspaceId String
+  email       String
+  reason      String
+  createdAt   DateTime @default(now())
+
+  @@unique([workspaceId, email])
+}
