@@ -1,11 +1,66 @@
-node_modules
-.next
-.env
-.env.local
-coverage
-*.log
-.DS_Store
+# Dependencies
+node_modules/
+.pnpm-store/
+.yarn/
+.npm/
 
-# local database / runtime data
-postgres-data
-redis-data
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Next.js
+.next/
+out/
+
+# Build / coverage
+build/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime / local data
+.tmp/
+tmp/
+.cache/
+*.pid
+*.pid.lock
+
+# Prisma / local DB artifacts
+prisma/*.db
+prisma/*.db-journal
+prisma/*.sqlite
+prisma/*.sqlite3
+
+# IDE / editors
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# OS / shell
+*.orig
+*~
+
+# Test artifacts
+playwright-report/
+test-results/
+
+# Docker local overrides
+docker-compose.override.yml
+
+# Misc local files
+*.local
+secrets/
+uploads/
