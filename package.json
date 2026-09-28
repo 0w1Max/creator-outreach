@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "worker": "tsx worker/index.ts",
     "db:generate": "prisma generate",
@@ -29,6 +29,7 @@
     "@types/nodemailer": "6.4.17",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
+    "prisma": "6.16.3",
     "tsx": "4.20.5",
     "typescript": "5.9.2"
   }
